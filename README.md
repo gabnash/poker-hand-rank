@@ -94,6 +94,10 @@ Provides a human-readable description of a poker hand.
 - **Game logic** - Compare hands in any card game using poker rankings
 - **iPhone apps** - Lightweight, fast evaluation with no external dependencies
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## Changes
 
 - **28 Jul 2026:** Added Swift implementation with scoring and description functions
