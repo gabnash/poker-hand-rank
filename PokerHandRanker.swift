@@ -134,7 +134,79 @@ func pokerHandRank(_ cards: [Card]) -> Int {
     }
 }
 
+/// Returns a human-readable description of a poker hand
+/// - Parameter cards: Array of 5 Card objects
+/// - Returns: String description like "Royal Flush", "Pair of Eights", "Straight", etc.
+func describePokerHand(_ cards: [Card]) -> String {
+    guard cards.count == 5 else { fatalError("Must provide exactly 5 cards") }
+    
+    let sortedRanks = cards.map { $0.rank.rawValue }.sorted(by: >)
+    let suits = cards.map { $0.suit.rawValue }
+    
+    let isFlush = Set(suits).count == 1
+    let isStraight = checkStraight(sortedRanks)
+    
+    let rankCounts = Dictionary(grouping: sortedRanks, by: { $0 })
+        .mapValues { $0.count }
+        .sorted { $0.value == $1.value ? $0.key > $1.key : $0.value > $1.value }
+    
+    let counts = rankCounts.map { $0.value }
+    
+    if isStraight && isFlush {
+        if isStraightFlushRoyal(sortedRanks) {
+            return "Royal Flush"
+        } else {
+            return "Straight Flush"
+        }
+    } else if counts == [4, 1] {
+        let quad = rankCounts[0].key
+        return "Four of a Kind, \(rankName(quad))s"
+    } else if counts == [3, 2] {
+        let trips = rankCounts[0].key
+        let pair = rankCounts[1].key
+        return "Full House, \(rankName(trips))s over \(rankName(pair))s"
+    } else if isFlush {
+        return "Flush"
+    } else if isStraight {
+        if sortedRanks == [14, 5, 4, 3, 2] {
+            return "Straight, Five high"
+        } else {
+            return "Straight, \(rankName(sortedRanks[0])) high"
+        }
+    } else if counts == [3, 1, 1] {
+        let trips = rankCounts[0].key
+        return "Three of a Kind, \(rankName(trips))s"
+    } else if counts == [2, 2, 1] {
+        let pairs = [rankCounts[0].key, rankCounts[1].key].sorted(by: >)
+        return "Two Pair, \(rankName(pairs[0]))s and \(rankName(pairs[1]))s"
+    } else if counts == [2, 1, 1, 1] {
+        let pair = rankCounts[0].key
+        return "Pair of \(rankName(pair))s"
+    } else {
+        return "High Card, \(rankName(sortedRanks[0])) high"
+    }
+}
+
 // MARK: - Helper Functions
+
+private func rankName(_ rankValue: Int) -> String {
+    switch rankValue {
+    case 2: return "Two"
+    case 3: return "Three"
+    case 4: return "Four"
+    case 5: return "Five"
+    case 6: return "Six"
+    case 7: return "Seven"
+    case 8: return "Eight"
+    case 9: return "Nine"
+    case 10: return "Ten"
+    case 11: return "Jack"
+    case 12: return "Queen"
+    case 13: return "King"
+    case 14: return "Ace"
+    default: return "Unknown"
+    }
+}
 
 private func checkStraight(_ sortedRanks: [Int]) -> Bool {
     // Check for regular straight
