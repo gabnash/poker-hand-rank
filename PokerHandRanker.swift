@@ -111,14 +111,10 @@ func pokerHandRank(_ cards: [Card]) -> Int {
     
     let counts = rankCounts.map { $0.value }
     
-    // Hand ranking (from worst to best)
-    // Each category is offset to ensure proper ordering
-    let baseScore: Int
-    
     if isStraight && isFlush {
         // Royal Flush or Straight Flush
-        baseScore = 8_000_000 + (isStraightFlushRoyal(sortedRanks) ? 1_000_000 : 0)
-        return baseScore + sortedRanks[0] * 10000
+        let score = 8_000_000 + (isStraightFlushRoyal(sortedRanks) ? 1_000_000 : 0)
+        return score + sortedRanks[0] * 10000
     } else if counts == [4, 1] {
         // Four of a Kind
         let quad = rankCounts[0].key
