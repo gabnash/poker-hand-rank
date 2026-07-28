@@ -93,6 +93,7 @@ struct Card {
 }
 
 /// Calculates the poker ranking score for a 5-card hand
+/// Score = base card values sum + hand type bonus
 /// Higher scores indicate better hands
 /// - Parameter cards: Array of 5 Card objects
 /// - Returns: Integer score where higher = better hand
@@ -111,47 +112,39 @@ func pokerHandRank(_ cards: [Card]) -> Int {
     
     let counts = rankCounts.map { $0.value }
     
+    // Calculate base score from card values
+    // In a wheel straight, Ace counts as 1, otherwise 14
+    let isWheel = sortedRanks == [14, 5, 4, 3, 2]
+    let baseScore = calculateBaseScore(sortedRanks, isWheel: isWheel)
+    
     if isStraight && isFlush {
         // Royal Flush or Straight Flush
-        let score = 8_000_000 + (isStraightFlushRoyal(sortedRanks) ? 1_000_000 : 0)
-        // Wheel (A-2-3-4-5) is lowest straight flush
-        let highCard = (sortedRanks == [14, 5, 4, 3, 2]) ? 5 : sortedRanks[0]
-        return score + highCard * 10000
+        let bonus = isStraightFlushRoyal(sortedRanks) ? 9_000 : 8_000
+        return baseScore + bonus
     } else if counts == [4, 1] {
         // Four of a Kind
-        let quad = rankCounts[0].key
-        let kicker = rankCounts[1].key
-        return 7_000_000 + quad * 10000 + kicker
+        return baseScore + 7_000
     } else if counts == [3, 2] {
         // Full House
-        let trips = rankCounts[0].key
-        let pair = rankCounts[1].key
-        return 6_000_000 + trips * 10000 + pair
+        return baseScore + 6_000
     } else if isFlush {
         // Flush
-        return 5_000_000 + flushScore(sortedRanks)
+        return baseScore + 5_000
     } else if isStraight {
-        // Straight - wheel (A-2-3-4-5) is lowest
-        let highCard = (sortedRanks == [14, 5, 4, 3, 2]) ? 5 : sortedRanks[0]
-        return 4_000_000 + highCard * 10000
+        // Straight
+        return baseScore + 4_000
     } else if counts == [3, 1, 1] {
         // Three of a Kind
-        let trips = rankCounts[0].key
-        let kickers = [rankCounts[1].key, rankCounts[2].key].sorted(by: >)
-        return 3_000_000 + trips * 10000 + kickers[0] * 100 + kickers[1]
+        return baseScore + 3_000
     } else if counts == [2, 2, 1] {
         // Two Pair
-        let pairs = [rankCounts[0].key, rankCounts[1].key].sorted(by: >)
-        let kicker = rankCounts[2].key
-        return 2_000_000 + pairs[0] * 10000 + pairs[1] * 100 + kicker
+        return baseScore + 2_000
     } else if counts == [2, 1, 1, 1] {
         // One Pair
-        let pair = rankCounts[0].key
-        let kickers = [rankCounts[1].key, rankCounts[2].key, rankCounts[3].key].sorted(by: >)
-        return 1_000_000 + pair * 10000 + kickers[0] * 100 + kickers[1] * 10 + kickers[2]
+        return baseScore + 1_000
     } else {
         // High Card
-        return highCardScore(sortedRanks)
+        return baseScore
     }
 }
 
@@ -251,19 +244,16 @@ private func isStraightFlushRoyal(_ sortedRanks: [Int]) -> Bool {
     return sortedRanks == [14, 13, 12, 11, 10]
 }
 
-private func flushScore(_ sortedRanks: [Int]) -> Int {
-    // For flushes, rank by highest cards in order
-    return sortedRanks[0] * 10000 + 
-           sortedRanks[1] * 100 + 
-           sortedRanks[2] * 10 + 
-           sortedRanks[3]
-}
-
-private func highCardScore(_ sortedRanks: [Int]) -> Int {
-    // For high card, rank by all cards in order
-    return sortedRanks[0] * 10000 + 
-           sortedRanks[1] * 1000 + 
-           sortedRanks[2] * 100 + 
-           sortedRanks[3] * 10 + 
-           sortedRanks[4]
+private func calculateBaseScore(_ sortedRanks: [Int], isWheel: Bool) -> Int {
+    // Calculate sum of card values
+    // In a wheel straight, Ace = 1, otherwise Ace = 14
+    var sum = 0
+    for rank in sortedRanks {
+        if isWheel && rank == 14 {
+            sum += 1  // Ace counts as 1 in wheel straight
+        } else {
+            sum += rank
+        }
+    }
+    return sum
 }
