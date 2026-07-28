@@ -114,7 +114,9 @@ func pokerHandRank(_ cards: [Card]) -> Int {
     if isStraight && isFlush {
         // Royal Flush or Straight Flush
         let score = 8_000_000 + (isStraightFlushRoyal(sortedRanks) ? 1_000_000 : 0)
-        return score + sortedRanks[0] * 10000
+        // Wheel (A-2-3-4-5) is lowest straight flush
+        let highCard = (sortedRanks == [14, 5, 4, 3, 2]) ? 5 : sortedRanks[0]
+        return score + highCard * 10000
     } else if counts == [4, 1] {
         // Four of a Kind
         let quad = rankCounts[0].key
@@ -129,8 +131,9 @@ func pokerHandRank(_ cards: [Card]) -> Int {
         // Flush
         return 5_000_000 + flushScore(sortedRanks)
     } else if isStraight {
-        // Straight
-        return 4_000_000 + sortedRanks[0] * 10000
+        // Straight - wheel (A-2-3-4-5) is lowest
+        let highCard = (sortedRanks == [14, 5, 4, 3, 2]) ? 5 : sortedRanks[0]
+        return 4_000_000 + highCard * 10000
     } else if counts == [3, 1, 1] {
         // Three of a Kind
         let trips = rankCounts[0].key
